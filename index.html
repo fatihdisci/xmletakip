@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>e-Takip XML Hazırlayıcı</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="top"><div class="top-in">
+  <span class="brand">e-Takip <span class="seal">·</span> XML Hazırlayıcı</span>
+  <span class="tag">UYAP Takip Açılış · Örnek 7 ve Örnek 4-5</span>
+  <span class="spacer"></span>
+  <span class="dtd">Exchange.dtd v1.2</span>
+</div></div>
+
+<div class="wrap">
+  <!-- ===== FORM ===== -->
+  <div class="col-form">
+
+    <!-- 1 DOSYA -->
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">1</span>
+        <span class="sec-title">Dosya & Takip Türü</span>
+        <span class="sec-hint">Yalnızca desteklenen takip türleri</span></div>
+      <div class="sec-body">
+        <div class="field"><label>Dosya Tipi</label>
+          <input type="text" id="dosyaTipi" value="Genel İcra Dairesi"></div>
+        <div class="row c3">
+          <div class="field"><label>Takip Türü</label><select id="takipTuru"></select></div>
+          <div class="field"><label>Takip Yolu</label><select id="takipYolu"></select></div>
+          <div class="field"><label>Takip Şekli</label><select id="takipSekli"></select></div>
+        </div>
+        <div class="note" style="margin-top:0"><b>Kapsam:</b> İlamsız Genel Haciz (Örnek 7) ile ilamlı para/teminat takibi (Örnek 4-5) desteklenir. Kambiyo, tahliye ve rehnin paraya çevrilmesi takipleri bu sürümde üretilmez.</div>
+        <div class="field" id="mahiyetWrap"><label>Takip Mahiyeti</label>
+          <select id="mahiyetKodu"></select></div>
+        <div class="row c3">
+          <div class="field"><label>BK 84. Md. Uygulansın</label>
+            <select id="bk84"><option value="E">Evet</option><option value="H" selected>Hayır</option></select></div>
+          <div class="field"><label>BSMV Uygulansın</label>
+            <select id="bsmv"><option value="E">Evet</option><option value="H" selected>Hayır</option></select></div>
+          <div class="field"><label>KKDF Uygulansın</label>
+            <select id="kkdf"><option value="E">Evet</option><option value="H" selected>Hayır</option></select></div>
+        </div>
+        <div class="field"><label>Dosya Belirleyicisi (kendi referansınız · opsiyonel)</label>
+          <input type="text" id="dosyaBel" class="mono" placeholder="ör. 2026-0142"></div>
+        <div class="field"><label>Rehin / İpotek Açıklaması (Takip Talebi 5. madde · opsiyonel)</label>
+          <textarea id="rehinIpotek15Aciklama" rows="2" placeholder="Rehin veya ipotekle temin edilmiş alacak varsa açıklama"></textarea></div>
+      </div>
+    </div>
+
+    <!-- 2 TARAFLAR -->
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">2</span>
+        <span class="sec-title">Taraflar</span>
+        <span class="sec-hint">Alacaklı ve borçlular</span></div>
+      <div class="sec-body">
+        <div id="taraflar"></div>
+        <div class="row c2" style="margin-top:2px">
+          <button class="addbtn" onclick="addTaraf('21')">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Alacaklı ekle</button>
+          <button class="addbtn" onclick="addTaraf('22')">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            Borçlu ekle</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 VEKİL -->
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">3</span>
+        <span class="sec-title">Alacaklı Vekili</span>
+        <span class="sec-hint">Avukat bilgileri · opsiyonel</span></div>
+      <div class="sec-body">
+        <label class="faiztgl" style="margin-bottom:13px">
+          <input type="checkbox" id="vekilAktif"> Vekil (avukat) bilgisi ekle</label>
+        <div id="vekilBody" style="display:none">
+          <div class="row c2">
+            <div class="field"><label>Adı</label><input type="text" id="vAdi"></div>
+            <div class="field"><label>Soyadı</label><input type="text" id="vSoyadi"></div>
+          </div>
+          <div class="row c3">
+            <div class="field"><label>T.C. Kimlik No</label><input type="text" id="vTc" class="mono" maxlength="11"></div>
+            <div class="field"><label>Baro Sicil No</label><input type="text" id="vBaro" class="mono"></div>
+            <div class="field"><label>TBB No</label><input type="text" id="vTbb" class="mono"></div>
+          </div>
+          <div class="field"><label>Büro Adresi</label><input type="text" id="vAdres"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 İLAM -->
+    <div class="section" id="ilamSection" style="display:none">
+      <div class="sec-head"><span class="sec-num">4</span>
+        <span class="sec-title">İlam Bilgileri</span>
+        <span class="sec-hint">Örnek 4-5 için zorunlu</span></div>
+      <div class="sec-body">
+        <div class="field"><label>İlamı Veren Mahkeme / Merci</label><input type="text" id="ilamiVerenMahkeme" placeholder="Örn. İstanbul 12. Asliye Hukuk Mahkemesi"></div>
+        <div class="row c3">
+          <div class="field"><label>İlam Tarihi (GG/AA/YYYY)</label><input type="text" id="ilamTarihi" class="mono" placeholder="01/01/2026"></div>
+          <div class="field"><label>Karar Yılı</label><input type="text" id="ilamKararNoYil" class="mono" maxlength="4" placeholder="2026"></div>
+          <div class="field"><label>Karar Sıra No</label><input type="text" id="ilamKararSira" class="mono" placeholder="123"></div>
+        </div>
+        <div class="row c2">
+          <div class="field"><label>Kesinleşme Tarihi (opsiyonel)</label><input type="text" id="kesinlesmeTarih" class="mono" placeholder="01/02/2026"></div>
+          <div class="field"><label>İlam Açıklaması (opsiyonel)</label><input type="text" id="ilamAciklama" placeholder="Kararın kısa özeti"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 ALACAK KALEMLERİ -->
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">5</span>
+        <span class="sec-title">Alacak Kalemleri</span>
+        <span class="sec-hint">Asıl alacak · faiz · vekalet · masraf</span></div>
+      <div class="sec-body">
+        <div id="kalemler"></div>
+        <button class="addbtn" onclick="addKalem()">
+          <svg viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          Alacak kalemi ekle</button>
+      </div>
+    </div>
+
+    <!-- 6 TALEP -->
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">6</span>
+        <span class="sec-title">Talep Metni</span>
+        <span class="sec-hint">Takip talebi 4. madde</span></div>
+      <div class="sec-body">
+        <label class="faiztgl" style="margin-bottom:11px">
+          <input type="checkbox" id="talepOto" checked> Kalemlerden otomatik oluştur</label>
+        <div class="field"><textarea id="talep" class="mono" rows="5"></textarea></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== PREVIEW ===== -->
+  <div class="preview">
+    <div class="pv-card">
+      <div class="pv-head">
+        <span class="pv-dot" id="pvDot"></span>
+        <span class="pv-title">takip.xml</span>
+        <button class="pv-copy" onclick="copyXml()">Kopyala</button>
+      </div>
+      <pre class="xml" id="xmlOut"></pre>
+    </div>
+    <div class="status" id="status"></div>
+    <button class="dl" id="dlBtn" onclick="downloadXml()">XML dosyasını indir</button>
+    <div class="note">
+      <b>İlk yüklemede test edin.</b> Bu araç 06.03.2026 tarihli resmi <b>exchange.dtd v1.2</b> ve kod tablolarına göre XML üretir. UYAP Avukat Portal → <b>İcra Takibi › Takip Açılış-XML</b> ekranından
+      yükleyin. UYAP’taki son kontrol ve takip talebinin hukuki içeriği kullanıcı sorumluluğundadır.
+    </div>
+  </div>
+</div>
+
+<div class="foot">Veriler tarayıcınızdan çıkmaz · üretilen XML yalnızca sizin cihazınızda oluşturulur.</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
