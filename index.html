@@ -11,6 +11,7 @@
   <span class="brand">e-Takip <span class="seal">·</span> XML Hazırlayıcı</span>
   <span class="tag">UYAP Takip Açılış · Örnek 7 ve Örnek 4-5</span>
   <span class="spacer"></span>
+  <button class="pv-copy" type="button" onclick="temizleTaslak()">Taslağı temizle</button>
   <span class="dtd">Exchange.dtd v1.2</span>
 </div></div>
 
@@ -35,8 +36,8 @@
         <div class="field" id="mahiyetWrap"><label>Takip Mahiyeti</label>
           <select id="mahiyetKodu"></select></div>
         <div class="row c3">
-          <div class="field"><label>BK 84. Md. Uygulansın</label>
-            <select id="bk84"><option value="E">Evet</option><option value="H" selected>Hayır</option></select></div>
+          <div class="field"><label>TBK 100 / BK 84 Uygulansın</label>
+            <select id="bk84"><option value="E" selected>Evet</option><option value="H">Hayır</option></select></div>
           <div class="field"><label>BSMV Uygulansın</label>
             <select id="bsmv"><option value="E">Evet</option><option value="H" selected>Hayır</option></select></div>
           <div class="field"><label>KKDF Uygulansın</label>
@@ -44,6 +45,8 @@
         </div>
         <div class="field"><label>Dosya Belirleyicisi (kendi referansınız · opsiyonel)</label>
           <input type="text" id="dosyaBel" class="mono" placeholder="ör. 2026-0142"></div>
+        <div class="field"><label>Takip Talebi 9. Madde Açıklaması</label>
+          <input type="text" id="aciklama48e9" value="Haciz"></div>
         <div class="field"><label>Rehin / İpotek Açıklaması (Takip Talebi 5. madde · opsiyonel)</label>
           <textarea id="rehinIpotek15Aciklama" rows="2" placeholder="Rehin veya ipotekle temin edilmiş alacak varsa açıklama"></textarea></div>
       </div>
@@ -75,6 +78,8 @@
       <div class="sec-body">
         <label class="faiztgl" style="margin-bottom:13px">
           <input type="checkbox" id="vekilAktif"> Vekil (avukat) bilgisi ekle</label>
+        <label class="faiztgl" style="margin-bottom:13px">
+          <input type="checkbox" id="vekilHatirla"> Vekili hatırla</label>
         <div id="vekilBody" style="display:none">
           <div class="row c2">
             <div class="field"><label>Adı</label><input type="text" id="vAdi"></div>
@@ -85,6 +90,7 @@
             <div class="field"><label>Baro Sicil No</label><input type="text" id="vBaro" class="mono"></div>
             <div class="field"><label>TBB No</label><input type="text" id="vTbb" class="mono"></div>
           </div>
+          <div class="field"><label>Vergi No</label><input type="text" id="vVergi" class="mono" maxlength="10"></div>
           <div class="field"><label>Büro Adresi</label><input type="text" id="vAdres"></div>
         </div>
       </div>
@@ -92,7 +98,7 @@
 
     <!-- 4 İLAM -->
     <div class="section" id="ilamSection" style="display:none">
-      <div class="sec-head"><span class="sec-num">4</span>
+      <div class="sec-head"><span class="sec-num" id="ilamSecNum">4</span>
         <span class="sec-title">İlam Bilgileri</span>
         <span class="sec-hint">Örnek 4-5 için zorunlu</span></div>
       <div class="sec-body">
@@ -106,12 +112,16 @@
           <div class="field"><label>Kesinleşme Tarihi (opsiyonel)</label><input type="text" id="kesinlesmeTarih" class="mono" placeholder="01/02/2026"></div>
           <div class="field"><label>İlam Açıklaması (opsiyonel)</label><input type="text" id="ilamAciklama" placeholder="Kararın kısa özeti"></div>
         </div>
+        <div class="row c2">
+          <div class="field"><label>Esas Yılı</label><input type="text" id="ilamDosyaNoYil" class="mono" maxlength="4" placeholder="2025"></div>
+          <div class="field"><label>Esas Sıra No</label><input type="text" id="ilamDosyaSira" class="mono" placeholder="456"></div>
+        </div>
       </div>
     </div>
 
     <!-- 5 ALACAK KALEMLERİ -->
     <div class="section">
-      <div class="sec-head"><span class="sec-num">5</span>
+      <div class="sec-head"><span class="sec-num" id="kalemSecNum">5</span>
         <span class="sec-title">Alacak Kalemleri</span>
         <span class="sec-hint">Asıl alacak · faiz · vekalet · masraf</span></div>
       <div class="sec-body">
@@ -124,7 +134,7 @@
 
     <!-- 6 TALEP -->
     <div class="section">
-      <div class="sec-head"><span class="sec-num">6</span>
+      <div class="sec-head"><span class="sec-num" id="talepSecNum">6</span>
         <span class="sec-title">Talep Metni</span>
         <span class="sec-hint">Takip talebi 4. madde</span></div>
       <div class="sec-body">
@@ -157,6 +167,7 @@
 
 <div class="foot">Veriler tarayıcınızdan çıkmaz · üretilen XML yalnızca sizin cihazınızda oluşturulur.</div>
 
+<script src="data_iller.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
