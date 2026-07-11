@@ -8,6 +8,11 @@ const nid = ()=> (++state.idc);
 
 /* ---------- kod yardımcıları ---------- */
 const H = UYAP_DATA.hiyerarsi;
+const XML_PARA_ADI = {
+  PRBRMTL:'TL - Türk Lirası',
+  PRBRMUSD:'USD - Amerikan Doları',
+  PRBRMEUR:'EUR - Euro'
+};
 function fillSelect(el, arr, valKey, txtKey, sel){
   el.innerHTML = arr.map(o=>`<option value="${o[valKey]}"${o[valKey]===sel?' selected':''}>${o[txtKey]}</option>`).join('');
 }
@@ -101,11 +106,11 @@ function renderTaraflar(){
       </div>
       ${t.tip==='kisi'?kisiFields:kurumFields}
       <div class="row c3">
-        <div class="field"><label>İl (opsiyonel)</label><select onchange="setT(${t.id},'ilKodu',this.value)">${ilOpt.replace(`value="${t.ilKodu}"`,`value="${t.ilKodu}" selected`)}</select></div>
-        <div class="field"><label>İlçe (opsiyonel)</label><select onchange="setT(${t.id},'ilceKodu',this.value)"${t.ilKodu?'':' disabled'}><option value="">— İlçe seç —</option>${(UYAP_ILLER.find(i=>i.kod===String(t.ilKodu))?.ilceler||[]).map(i=>`<option value="${i.kod}"${i.kod===String(t.ilceKodu)?' selected':''}>${i.ad}</option>`).join('')}</select></div>
+        <div class="field"><label>İl</label><select onchange="setT(${t.id},'ilKodu',this.value)">${ilOpt.replace(`value="${t.ilKodu}"`,`value="${t.ilKodu}" selected`)}</select></div>
+        <div class="field"><label>İlçe</label><select onchange="setT(${t.id},'ilceKodu',this.value)"${t.ilKodu?'':' disabled'}><option value="">— İlçe seç —</option>${(UYAP_ILLER.find(i=>i.kod===String(t.ilKodu))?.ilceler||[]).map(i=>`<option value="${i.kod}"${i.kod===String(t.ilceKodu)?' selected':''}>${i.ad}</option>`).join('')}</select></div>
         <div class="field"><label>IBAN — TR sonrası 24 hane (opsiyonel)</label><input type="text" class="mono" maxlength="24" value="${esc(t.iban)}" oninput="setT(${t.id},'iban',this.value)"></div>
       </div>
-      <div class="field"><label>Açık Adres (opsiyonel)</label><input type="text" value="${esc(t.adres)}" oninput="setT(${t.id},'adres',this.value)"></div>
+      <div class="field"><label>Açık Adres</label><input type="text" value="${esc(t.adres)}" oninput="setT(${t.id},'adres',this.value)"></div>
     </div>`;
   }).join('');
 }
@@ -120,7 +125,7 @@ function kalemKodOptions(){
 function addKalem(){
   const first = kalemKodOptions()[0];
   state.kalemler.push({id:nid(),kod:first.kod,ad:first.ad,turu:first.turu,tip:first.tip,
-    tutar:'',para:'PRBRMTL',alacakli:state.taraflar.find(t=>t.rol==='21')?.id||'',borclular:state.taraflar.filter(t=>t.rol==='22').map(t=>t.id),faizAcik:false,faizTip:'FAIZT00002',faizOran:'',faizBas:''});
+    tutar:'',para:'PRBRMTL',alacakli:state.taraflar.find(t=>t.rol==='21')?.id||'',borclular:state.taraflar.filter(t=>t.rol==='22').map(t=>t.id),faizAcik:first.turu==='1',faizTip:'FAIZT00002',faizOran:'',faizBas:''});
   renderKalemler(); render();
 }
 function rmKalem(id){ state.kalemler=state.kalemler.filter(k=>k.id!==id); renderKalemler(); render(); }
@@ -154,7 +159,7 @@ function renderKalemler(){
       <div class="row c3" style="margin-top:11px">
         <div class="field"><label>Faiz Türü</label><select onchange="setK(${k.id},'faizTip',this.value)">${faizOpts.map(f=>`<option value="${f.kod}"${f.kod===k.faizTip?' selected':''}>${f.ad}</option>`).join('')}</select></div>
         <div class="field"><label>Oran % (opsiyonel)</label><input type="text" class="mono" value="${esc(k.faizOran)}" oninput="setK(${k.id},'faizOran',this.value)" placeholder="değişken"></div>
-        <div class="field"><label>Başlangıç (GG/AA/YYYY)</label><input type="text" class="mono" value="${esc(k.faizBas)}" oninput="setK(${k.id},'faizBas',this.value)" placeholder="01/01/2026"></div>
+        <div class="field"><label>Başlangıç (GG/AA/YYYY)</label><input type="text" class="mono" value="${esc(k.faizBas)}" oninput="setK(${k.id},'faizBas',this.value)" placeholder="Boş bırak = takip tarihinden itibaren"></div>
       </div>`:'';
     return `<div class="entry">
       <div class="entry-top"><span class="chip ka">Kalem ${idx+1} · ${turAd}</span>
@@ -181,7 +186,7 @@ document.getElementById('vekilHatirla').onchange=render;
 ['vAdi','vSoyadi','vTc','vBaro','vTbb','vVergi','vAdres'].forEach(id=>{
   document.getElementById(id).addEventListener('input',render);
 });
-['dosyaTipi','bk84','bsmv','kkdf','dosyaBel','aciklama48e9','rehinIpotek15Aciklama'].forEach(id=>{
+['dosyaTipi','bk84','bsmv','kkdf','dosyaBel','aciklama48e9','rehinIpotek15Aciklama','digerAlacakAciklama','digerAlacakTarih'].forEach(id=>{
   document.getElementById(id).addEventListener('input',render);
 });
 ['ilamiVerenMahkeme','ilamTarihi','ilamKararNoYil','ilamKararSira','ilamDosyaNoYil','ilamDosyaSira','kesinlesmeTarih','ilamAciklama'].forEach(id=>{
@@ -211,8 +216,9 @@ function tcKimlikGecerli(tc){
   return ((tek*7-cift)%10+10)%10===d[9] && d.slice(0,10).reduce((a,b)=>a+b,0)%10===d[10];
 }
 function vergiNoGecerli(no){ return /^\d{10}$/.test(no); }
+function xmlBuyuk(s){ return String(s??'').toLocaleUpperCase('tr-TR'); }
 
-const formIds=['dosyaTipi','takipTuru','takipYolu','takipSekli','mahiyetKodu','bk84','bsmv','kkdf','dosyaBel','aciklama48e9','rehinIpotek15Aciklama','vekilAktif','vekilHatirla','vAdi','vSoyadi','vTc','vBaro','vTbb','vVergi','vAdres','ilamiVerenMahkeme','ilamTarihi','ilamKararNoYil','ilamKararSira','ilamDosyaNoYil','ilamDosyaSira','kesinlesmeTarih','ilamAciklama','talepOto','talep'];
+const formIds=['dosyaTipi','takipTuru','takipYolu','takipSekli','mahiyetKodu','bk84','bsmv','kkdf','dosyaBel','aciklama48e9','rehinIpotek15Aciklama','digerAlacakAciklama','digerAlacakTarih','vekilAktif','vekilHatirla','vAdi','vSoyadi','vTc','vBaro','vTbb','vVergi','vAdres','ilamiVerenMahkeme','ilamTarihi','ilamKararNoYil','ilamKararSira','ilamDosyaNoYil','ilamDosyaSira','kesinlesmeTarih','ilamAciklama','talepOto','talep'];
 let taslakKaydiniAtla=false;
 function formVerisi(){ return Object.fromEntries(formIds.map(id=>{const e=document.getElementById(id);return [id,e?.type==='checkbox'?e.checked:e?.value||''];})); }
 function formVerisiniUygula(form){ formIds.forEach(id=>{const e=document.getElementById(id);if(!e||form[id]===undefined)return;e.type==='checkbox'?e.checked=Boolean(form[id]):e.value=form[id];}); document.getElementById('vekilBody').style.display=document.getElementById('vekilAktif').checked?'':'none'; }
@@ -247,7 +253,10 @@ function talepMetni(){
 /* ---------- XML üretimi ---------- */
 function buildXML(){
   const g=id=>document.getElementById(id).value;
-  const at=(k,v)=> v!==undefined&&v!==null&&v!=='' ? ` ${k}="${xmlEsc(v)}"` : '';
+  const at=(k,v)=>{
+    const temiz=String(v??'').trim().replace(/\s+/g,' ');
+    return temiz ? ` ${k}="${xmlEsc(temiz)}"` : '';
+  };
   const L=[]; let did=0;
   L.push(`<?xml version="1.0" encoding="UTF-8"?>`);
   L.push(`<exchangeData>`);
@@ -273,19 +282,19 @@ function buildXML(){
   let ti=0;
   state.taraflar.forEach(t=>{
     ti++; const kkb=`kkb_${ti}`, adrId=`adr_${ti}`;
-    const ad = t.tip==='kisi' ? `${t.adi} ${t.soyadi}`.trim() : t.kurumAdi;
+    const ad = t.tip==='kisi'
+      ? [t.adi,t.soyadi].map(s=>String(s??'').trim()).filter(Boolean).join(' ')
+      : String(t.kurumAdi??'').trim();
     L.push(`    <taraf id="taraf_${t.id}">`);
-    L.push(`      <kisiKurumBilgileri id="${kkb}"${at('ad',ad)}>`);
+    L.push(`      <kisiKurumBilgileri id="${kkb}"${at('ad',xmlBuyuk(ad))}>`);
     if(t.tip==='kisi'){
-      L.push(`        <kisiTumBilgileri id="kisi_${ti}"${at('adi',t.adi)}${at('soyadi',t.soyadi)}${at('tcKimlikNo',t.tc)}${at('vergiNo',t.vergiNo)} cinsiyeti="${t.cinsiyet}"/>`);
+      L.push(`        <kisiTumBilgileri id="kisi_${ti}"${at('adi',xmlBuyuk(t.adi))}${at('soyadi',xmlBuyuk(t.soyadi))}${at('tcKimlikNo',t.tc)}${at('vergiNo',t.vergiNo)} cinsiyeti="${t.cinsiyet}"/>`);
     }else{
-      L.push(`        <kurum id="kurum_${ti}"${at('kurumAdi',t.kurumAdi)}${at('vergiNo',t.vergiNo)}${at('mersisNo',t.mersis)} kamuOzel="${t.kamuOzel}" harcDurumu="1"/>`);
+      L.push(`        <kurum id="kurum_${ti}"${at('kurumAdi',xmlBuyuk(t.kurumAdi))}${at('vergiNo',t.vergiNo)}${at('mersisNo',t.mersis)} kamuOzel="${t.kamuOzel}" harcDurumu="1"/>`);
     }
-    if(t.ilKodu||t.ilceKodu||t.adres){
-      const adresTuru=t.tip==='kurum'?'ADRTR00002':'ADRTR00001';
-      const adresTuruAciklama=t.tip==='kurum'?'Yurt İçi İşyeri Adresi':'Yurt İçi İkametgah Adresi';
-      L.push(`        <adres id="${adrId}" adresTuru="${adresTuru}" adresTuruAciklama="${adresTuruAciklama}"${at('ilKodu',t.ilKodu)}${at('il',ilAdi(t.ilKodu))}${at('ilceKodu',t.ilceKodu)}${at('ilce',ilceAdi(t.ilKodu,t.ilceKodu))}${at('adres',t.adres)}/>`);
-    }
+    const adresTuru=t.tip==='kurum'?'ADRTR00002':'ADRTR00001';
+    const adresTuruAciklama=t.tip==='kurum'?'Yurt İçi İşyeri Adresi':'Yurt İçi İkametgah Adresi';
+    L.push(`        <adres id="${adrId}" adresTuru="${adresTuru}" adresTuruAciklama="${adresTuruAciklama}"${at('ilKodu',t.ilKodu)}${at('il',ilAdi(t.ilKodu))}${at('ilceKodu',t.ilceKodu)}${at('ilce',ilceAdi(t.ilKodu,t.ilceKodu))}${at('adres',t.adres)}/>`);
     L.push(`      </kisiKurumBilgileri>`);
     const r=UYAP_DATA.roller.find(x=>x.kod===t.rol)||{ad:''};
     L.push(`      <rolTur rolID="${t.rol}" Rol="${xmlEsc(r.ad)}"/>`);
@@ -297,8 +306,8 @@ function buildXML(){
   if(document.getElementById('vekilAktif').checked){
     const va=g('vAdi'),vs=g('vSoyadi'),vt=g('vTc'),vb=g('vBaro'),vtbb=g('vTbb'),vv=g('vVergi'),vad=g('vAdres');
     L.push(`    <VekilKisi id="vekil_1">`);
-    L.push(`      <vekil id="v_1"${at('adi',va)}${at('soyadi',vs)}${at('tcKimlikNo',vt)}${at('vergiNo',vv)}${at('baroNo',vb)}${at('tbbNo',vtbb)} vekilTipi="B" kurumAvukatiMi="H" sigortaliMi="H" borcluVekiliMi="H"/>`);
-    L.push(`      <kisiTumBilgileri id="vkisi_1"${at('adi',va)}${at('soyadi',vs)}${at('tcKimlikNo',vt)}/>`);
+    L.push(`      <vekil id="v_1"${at('adi',xmlBuyuk(va))}${at('soyadi',xmlBuyuk(vs))}${at('tcKimlikNo',vt)}${at('vergiNo',vv)}${at('baroNo',vb)}${at('tbbNo',vtbb)} vekilTipi="B" kurumAvukatiMi="H" sigortaliMi="H" borcluVekiliMi="H"/>`);
+    L.push(`      <kisiTumBilgileri id="vkisi_1"${at('adi',xmlBuyuk(va))}${at('soyadi',xmlBuyuk(vs))}${at('tcKimlikNo',vt)}/>`);
     if(vad) L.push(`      <adres id="vadr_1" adresTuru="ADRTR00002"${at('adres',vad)}/>`);
     L.push(`    </VekilKisi>`);
   }
@@ -310,14 +319,14 @@ function buildXML(){
       L.push(`    <ilam id="ilam_1"${at('ilamiVerenMahkeme',g('ilamiVerenMahkeme'))}${at('ilamTarihi',g('ilamTarihi'))}${at('ilamKararNoYil',g('ilamKararNoYil'))}${at('ilamKararSira',g('ilamKararSira'))}${at('ilamDosyaNoYil',g('ilamDosyaNoYil'))}${at('ilamDosyaSira',g('ilamDosyaSira'))}${at('kesinlesmeTarih',g('kesinlesmeTarih'))}${at('ilamAciklama',g('ilamAciklama'))}>`);
     }else{
       const top=xmlTutar(toplamTutar());
-      const paraAdi=UYAP_DATA.para.find(p=>p.kod===state.kalemler[0].para)?.ad||'';
-      L.push(`    <digerAlacak id="da_1" digerAlacakAciklama="Takip alacağı" tutar="${top}" tutarTur="${state.kalemler[0].para}"${at('tutarAdi',paraAdi)}>`);
+      const paraAdi=XML_PARA_ADI[state.kalemler[0].para]||'';
+      L.push(`    <digerAlacak id="da_1"${at('digerAlacakAciklama',g('digerAlacakAciklama'))}${at('tarih',g('digerAlacakTarih'))} tutar="${top}" tutarTur="${state.kalemler[0].para}"${at('tutarAdi',paraAdi)}>`);
     }
     let ki=0;
     state.kalemler.forEach(k=>{
       ki++;
       const kalemTutar=xmlTutar(k.tutar);
-      let a=`      <alacakKalemi id="ak_${ki}"${at('alacakKalemKod',k.kod)}${at('alacakKalemAdi',k.ad)}${at('alacakKalemKodAciklama',k.ad)}${at('alacakKalemTutar',kalemTutar)}${at('alacakKalemIlkTutar',kalemTutar)}${at('tutarTur',k.para)}${at('alacakKalemTip',k.tip)}${at('alacakKalemKodTuru',k.turu)}`;
+      let a=`      <alacakKalemi id="ak_${ki}"${at('alacakKalemKod',k.kod)}${at('alacakKalemAdi',k.ad)}${at('alacakKalemKodAciklama',k.ad)}${at('alacakKalemTutar',kalemTutar)}${at('alacakKalemIlkTutar',kalemTutar)}${at('tutarTur',k.para)}${at('tutarAdi',XML_PARA_ADI[k.para]||'')}${at('alacakKalemTip',k.tip)}${at('alacakKalemKodTuru',k.turu)}`;
       if(k.faizAcik){
         a+=`>`; L.push(a);
         if(String(k.alacakli||'').trim()) L.push(`        <ref to="taraf" id="taraf_${k.alacakli}"/>`);
@@ -346,7 +355,7 @@ function xmlEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').
 
 /* ---------- doğrulama ---------- */
 function validate(){
-  const errs=[], oks=[];
+  const errs=[], oks=[], warns=[];
   const al=state.taraflar.filter(t=>t.rol==='21');
   const bo=state.taraflar.filter(t=>t.rol==='22');
   (al.length?oks:errs).push(`En az bir alacaklı${al.length?' ('+al.length+')':' yok'}`);
@@ -358,6 +367,9 @@ function validate(){
     else { if(!t.kurumAdi) kimlikOk=false; }
   });
   if(state.taraflar.length) (kimlikOk?oks:errs).push(kimlikOk?'Taraf ad/unvan bilgileri tam':'Bazı taraflarda ad/unvan eksik');
+  state.taraflar.forEach((t,i)=>{
+    if(!(t.ilKodu&&t.ilceKodu&&String(t.adres||'').trim())) errs.push(`Taraf ${i+1}: il, ilçe ve açık adres zorunlu`);
+  });
   // kalem
   const kOk = state.kalemler.length>0 && state.kalemler.every(k=>Number.isFinite(parseTutar(k.tutar))&&al.some(t=>String(t.id)===String(k.alacakli))&&(k.borclular||[]).some(id=>bo.some(t=>String(t.id)===String(id))));
   const tekPara = new Set(state.kalemler.map(k=>k.para)).size<=1;
@@ -368,9 +380,21 @@ function validate(){
     if(t.tc&&!tcKimlikGecerli(t.tc)) errs.push(`Taraf ${i+1}: T.C. kimlik numarası geçersiz`);
     if(t.vergiNo&&!vergiNoGecerli(t.vergiNo)) errs.push(`Taraf ${i+1}: vergi no 10 hane olmalı`);
   });
-  if(document.getElementById('vTc').value&&!tcKimlikGecerli(document.getElementById('vTc').value)) errs.push('Vekil: T.C. kimlik numarası geçersiz');
-  if(document.getElementById('vVergi').value&&!vergiNoGecerli(document.getElementById('vVergi').value)) errs.push('Vekil: vergi no 10 hane olmalı');
-  state.kalemler.forEach((k,i)=>{ if(k.faizAcik && !/^\d{2}\/\d{2}\/\d{4}$/.test(k.faizBas)) errs.push(`Kalem ${i+1}: faiz başlangıcı GG/AA/YYYY biçiminde olmalı`); });
+  const vekilAktif=document.getElementById('vekilAktif').checked;
+  const vTc=document.getElementById('vTc').value.trim();
+  const vVergi=document.getElementById('vVergi').value.trim();
+  const vBaro=document.getElementById('vBaro').value.trim();
+  const vAdres=document.getElementById('vAdres').value.trim();
+  if(vekilAktif){
+    if(vTc&&!tcKimlikGecerli(vTc)) errs.push('Vekil: T.C. kimlik numarası geçersiz');
+    if(vVergi&&!vergiNoGecerli(vVergi)) errs.push('Vekil: vergi no 10 hane olmalı');
+    if(!vBaro) errs.push('Vekil: baro sicil no zorunlu');
+    if(!(vTc||vVergi)) errs.push('Vekil: T.C. kimlik no veya vergi no zorunlu');
+    if(!vAdres) warns.push('Vekil: büro adresi boş');
+  }
+  state.kalemler.forEach((k,i)=>{ if(k.faizAcik&&k.faizBas&&!/^\d{2}\/\d{2}\/\d{4}$/.test(k.faizBas)) errs.push(`Kalem ${i+1}: faiz başlangıcı GG/AA/YYYY biçiminde olmalı`); });
+  const talepMetniKontrol=document.getElementById('talepOto').checked?talepMetni():document.getElementById('talep').value;
+  if(!state.kalemler.some(k=>k.faizAcik)&&/faiz/i.test(talepMetniKontrol)) warns.push('Talep metninde faiz geçiyor ancak hiçbir kaleme faiz eklenmedi — takip faizsiz açılır');
   if(ilamliMi()){
     const mahkeme=document.getElementById('ilamiVerenMahkeme').value.trim();
     const tarih=document.getElementById('ilamTarihi').value.trim();
@@ -387,7 +411,7 @@ function validate(){
   if(document.getElementById('mahiyetWrap').style.display!=='none'){
     oks.push('Takip mahiyeti seçili');
   }
-  return {errs,oks,valid:errs.length===0};
+  return {errs,oks,warns,valid:errs.length===0};
 }
 
 /* ---------- render ---------- */
@@ -411,6 +435,8 @@ function render(){
   const v=validate();
   document.getElementById('status').innerHTML =
     v.oks.map(o=>`<div class="st-line st-ok"><span class="st-ico">✓</span>${esc(o)}</div>`).join('')+
+    v.errs.map(e=>`<div class="st-line st-err"><span class="st-ico">!</span>${esc(e)}</div>`).join('')+
+    v.warns.map(w=>`<div class="st-line st-warn"><span class="st-ico">!</span>${esc(w)}</div>`).join('');
     v.errs.map(e=>`<div class="st-line st-err"><span class="st-ico">!</span>${esc(e)}</div>`).join('');
   document.getElementById('pvDot').style.background = v.valid?'#5fbf9f':'#d98a8a';
   document.getElementById('dlBtn').disabled=!v.valid;
