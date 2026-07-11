@@ -112,7 +112,8 @@ pre.xml{margin:0;padding:16px;font-family:var(--mono);font-size:12px;line-height
 .st-ico{width:16px;height:16px;flex:none;border-radius:50%;display:grid;place-items:center;
   font-size:10px;font-weight:700;color:#fff}
 .st-ok .st-ico{background:var(--ok)}.st-err .st-ico{background:var(--seal)}
-.st-ok{color:var(--ink)}.st-err{color:var(--seal)}
+.st-warn .st-ico{background:var(--warn)}
+.st-ok{color:var(--ink)}.st-err{color:var(--seal)}.st-warn{color:var(--warn)}
 .dl{display:block;width:100%;margin-top:14px;padding:13px;border:none;border-radius:8px;
   background:var(--seal);color:#fff;font-weight:650;font-size:14px;letter-spacing:.01em}
 .dl:hover{background:#761f1f}
